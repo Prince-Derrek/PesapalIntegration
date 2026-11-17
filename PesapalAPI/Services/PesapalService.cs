@@ -3,7 +3,7 @@ using PesapalAPI.Models;
 using System.Net.Http.Json;
 using System.Text.Json;
 
-namespace PesapalApi.Services
+namespace PesapalAPI.Services
 {
     public class PesapalService(
         HttpClient httpClient,
