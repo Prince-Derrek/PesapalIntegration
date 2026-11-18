@@ -100,7 +100,7 @@ namespace PesapalAPI.Services
         public async Task<RegisterIpnResponse> RegisterIpnAsync()
         {
             var authToken = await AuthenticateAsync();
-            var token = authToken.token;
+            var bearerToken = authToken.token;
 
             var ipnReg = configuration["Integration:IpnReg"];
             if (string.IsNullOrWhiteSpace(ipnReg))
@@ -132,7 +132,7 @@ namespace PesapalAPI.Services
                 Content = content
             };
 
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", bearerToken);
 
             request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
@@ -164,6 +164,46 @@ namespace PesapalAPI.Services
 
             return registrationResponse;
 
+        }
+
+        public async Task<List<IpnListResponse>> GetIpnListAsync()
+        {
+            var authToken = await AuthenticateAsync();
+            var bearerToken = authToken.token;
+
+            var getIpnUrl = configuration["Integration:GetIpn"];
+            if (string.IsNullOrWhiteSpace(getIpnUrl))
+            {
+                logger.LogError("The Get IPN Url is missing");
+                throw new InvalidOperationException(
+                    "The Get IPN Url is missing"
+                );
+            }
+
+            using var request = new HttpRequestMessage(HttpMethod.Get, getIpnUrl);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", bearerToken);
+
+            request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
+            using var response = await httpClient.SendAsync(request);
+            if (!response.IsSuccessStatusCode)
+            {
+                logger.LogError("Error occured when the GET request was sent Status: {StatusCode}", response.StatusCode);
+                throw new InvalidOperationException(
+                    "Get IPN list request failed"
+                );
+            }
+
+            var ipnListResponse = await response.Content.ReadFromJsonAsync<List<IpnListResponse>>();
+            if (ipnListResponse is [])
+            {
+                logger.LogError("No IPNs were found registered");
+                throw new InvalidOperationException(
+                    "No IPNs were found"
+                );
+            }
+
+            return ipnListResponse;
         }
     }
 }
