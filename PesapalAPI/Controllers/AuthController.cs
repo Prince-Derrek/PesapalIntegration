@@ -4,7 +4,7 @@ using PesapalAPI.Services;
 namespace PesapalAPI.Controller;
 
 [ApiController]
-[Route("api/auths")]
+[Route("api/auth")]
 public class AuthController : ControllerBase
 {
     private readonly PesapalService _pesapalService;
