@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using PesapalAPI.Models;
 
 namespace PesapalAPI.Controller;
 
@@ -13,14 +14,14 @@ public class IpnController : ControllerBase
         _logger = logger;
     }
     [HttpGet]
-    public IActionResult PaymentNotification(string orderTrackingId, string orderNotificationType, string orderMerchantReference)
+    public IActionResult PaymentNotification([FromQuery] NotificationModel req)
     {
-        _logger.LogInformation("{TrackingId}, {NotificationType}, {MerchantReference}", orderTrackingId, orderNotificationType, orderMerchantReference);
+        _logger.LogInformation("{TrackingId}, {NotificationType}, {MerchantReference}", req.OrderTrackingId, req.OrderNotificationType, req.OrderMerchantReference);
         var payload = new
         {
-            OrderNotificationType = orderNotificationType,
-            OrderTrackingId = orderTrackingId,
-            OrderMerchantReference = orderMerchantReference,
+            orderNotificationType = req.OrderNotificationType,
+            orderTrackingId = req.OrderTrackingId,
+            orderMerchantReference = req.OrderMerchantReference,
             Status = 200
         };
         return Ok(payload);

@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using PesapalAPI.Models;
 
 namespace PesapalAPI.Controller;
 
@@ -14,15 +15,14 @@ public class PaymentCallbackController : ControllerBase
     }
 
     [HttpGet("callback")]
-    public IActionResult PaymentCallback(string orderTrackingId, string orderMerchantReference, string orderNotificationType)
+    public IActionResult PaymentCallback([FromQuery] NotificationModel req)
     {
-        _logger.LogInformation("{TrackingId}, {NotificationType}, {MerchantReference}", orderTrackingId, orderNotificationType, orderMerchantReference);
-        var payload = new
+        _logger.LogInformation("{TrackingId}, {NotificationType}, {MerchantReference}", req.OrderTrackingId, req.OrderNotificationType, req.OrderMerchantReference);
+        var payload = new NotificationModel
         {
-            OrderNotificationType = orderNotificationType,
-            OrderTrackingId = orderTrackingId,
-            OrderMerchantReference = orderMerchantReference,
-            Status = 200
+            OrderNotificationType = req.OrderNotificationType,
+            OrderTrackingId = req.OrderTrackingId,
+            OrderMerchantReference = req.OrderMerchantReference,
         };
         return Ok(payload);
     }
