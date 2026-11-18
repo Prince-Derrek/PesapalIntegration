@@ -31,6 +31,8 @@ public class IpnRegistrationController : ControllerBase
         }
     }
 
+
+    //Discrepancy from pesapal as it returns an empty list!
     [HttpGet("list")]
     public async Task<IActionResult> GetIpnListAsync()
     {
