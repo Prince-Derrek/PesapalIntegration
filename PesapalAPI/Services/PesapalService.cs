@@ -212,11 +212,43 @@ namespace PesapalAPI.Services
             return ipnListResponse;
         }
 
-        public async Task<SubmitOrderResponse> SubmitOrderAsync(decimal amount, string description, string phoneNumber, string emailAddress)
+        public async Task<SubmitOrderResponse> SubmitOrderAsync(decimal amount, string description, string? phoneNumber, string? emailAddress)
         {
+            // Input Validation
+            if (
+                string.IsNullOrWhiteSpace(phoneNumber)
+                &&
+                string.IsNullOrWhiteSpace(emailAddress)
+            )
+            {
+                logger.LogError("Both Phone Number and Email Address were not provided");
+                throw new InvalidOperationException(
+                    "Both Phone Number and Email Address were not provided"
+                );
+            }
+
+            if (amount is <= 0)
+            {
+                logger.LogError(
+                    "Amount provided: {Amount} is invalid for a transaction", amount
+                    );
+                throw new InvalidOperationException(
+                    "The Amount provided is incalid for a transaction"
+                );
+            }
+
+            if (string.IsNullOrWhiteSpace(description))
+            {
+                logger.LogError("Order Description was not provided");
+                throw new InvalidOperationException(
+                    "Order Description was not provided"
+                );
+            }
+
             var authToken = await AuthenticateAsync();
             var bearerToken = authToken.token;
 
+            //Prepare data
             var orderUrl = configuration["Integration:OrderUrl"];
             if (string.IsNullOrWhiteSpace(orderUrl))
             {
@@ -225,12 +257,22 @@ namespace PesapalAPI.Services
                     "Order Url is missing"
                 );
             }
+
             var notificationId = configuration["Integration:IpnId"];
             if (string.IsNullOrWhiteSpace(notificationId))
             {
                 logger.LogError("Notification Id is missing");
                 throw new InvalidOperationException(
                     "Notification Id is missing"
+                );
+            }
+
+            var callbackUrl = configuration["Integration:CallbackUrl"];
+            if (string.IsNullOrWhiteSpace(callbackUrl))
+            {
+                logger.LogError("Callback Url is missing");
+                throw new InvalidOperationException(
+                    "Callback Url is missing"
                 );
             }
 
@@ -242,11 +284,11 @@ namespace PesapalAPI.Services
 
             var payload = new SubmitOrderRequest
             {
-                Id = new Guid(),
+                Id = Guid.NewGuid().ToString(),
                 Currency = "KES",
                 Amount = amount,
                 Description = description,
-                CallbackUrl = "",
+                CallbackUrl = callbackUrl,
                 NotificationId = notificationId,
                 BillingAddress = billingAddress
             };
@@ -259,6 +301,10 @@ namespace PesapalAPI.Services
             {
                 Content = content
             };
+
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", bearerToken);
+
+            request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
             using var response = await httpClient.SendAsync(request);
             if (!response.IsSuccessStatusCode)
