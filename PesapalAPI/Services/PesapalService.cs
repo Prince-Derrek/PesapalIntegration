@@ -211,5 +211,83 @@ namespace PesapalAPI.Services
 
             return ipnListResponse;
         }
+
+        public async Task<SubmitOrderResponse> SubmitOrderAsync(decimal amount, string description, string phoneNumber, string emailAddress)
+        {
+            var authToken = await AuthenticateAsync();
+            var bearerToken = authToken.token;
+
+            var orderUrl = configuration["Integration:OrderUrl"];
+            if (string.IsNullOrWhiteSpace(orderUrl))
+            {
+                logger.LogError("Order Url is missing");
+                throw new InvalidOperationException(
+                    "Order Url is missing"
+                );
+            }
+            var notificationId = configuration["Integration:IpnId"];
+            if (string.IsNullOrWhiteSpace(notificationId))
+            {
+                logger.LogError("Notification Id is missing");
+                throw new InvalidOperationException(
+                    "Notification Id is missing"
+                );
+            }
+
+            var billingAddress = new BillingAddress
+            {
+                PhoneNumber = phoneNumber,
+                EmailAddress = emailAddress
+            };
+
+            var payload = new SubmitOrderRequest
+            {
+                Id = new Guid(),
+                Currency = "KES",
+                Amount = amount,
+                Description = description,
+                CallbackUrl = "",
+                NotificationId = notificationId,
+                BillingAddress = billingAddress
+            };
+
+            string json = JsonSerializer.Serialize(payload);
+
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+            using var request = new HttpRequestMessage(HttpMethod.Post, orderUrl)
+            {
+                Content = content
+            };
+
+            using var response = await httpClient.SendAsync(request);
+            if (!response.IsSuccessStatusCode)
+            {
+                logger.LogError("Error occured when the Order request was sent Status: {StatusCode} for Order Id {OrderId}", response.StatusCode, payload.Id);
+                throw new InvalidOperationException(
+                    $"Submit order request failed || OrderID {payload.Id}"
+                );
+            }
+
+            var orderResponse = await response.Content.ReadFromJsonAsync<SubmitOrderResponse>();
+            if (orderResponse is null)
+            {
+                logger.LogError("Pesapal returned a null response");
+                throw new InvalidOperationException(
+                    "An Unexpected error occured. Received a null response"
+                );
+            }
+
+            if (orderResponse.Status != "200")
+            {
+                logger.LogError("Order failed with status: {StatusCode} || {ErrorMessage}", orderResponse.Status, orderResponse.Error);
+                throw new InvalidOperationException(
+                    "Error Occured. Order Failed"
+                );
+            }
+
+            return orderResponse;
+
+        }
     }
 }
