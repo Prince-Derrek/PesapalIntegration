@@ -2,7 +2,7 @@ using System.Text.Json.Serialization;
 
 namespace PesapalAPI.Models;
 
-public class AuthRequest
+public class PesapalAuthRequest
 {
     [JsonPropertyName("consumer_key")]
     public string consumerKey { get; set; } = string.Empty;

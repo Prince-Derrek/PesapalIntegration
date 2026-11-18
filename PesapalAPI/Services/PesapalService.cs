@@ -2,6 +2,8 @@ using System.Threading.Tasks;
 using PesapalAPI.Models;
 using System.Net.Http.Json;
 using System.Text.Json;
+using System.Net.Http.Headers;
+using System.Text;
 
 namespace PesapalAPI.Services
 {
@@ -15,14 +17,37 @@ namespace PesapalAPI.Services
         {
             // prepare data
             var Key = configuration["Merchant:consumer_key"];
+            if (Key is null || Key is "")
+            {
+                logger.LogError("Consumer Key is missing");
+                throw new InvalidOperationException(
+                    "Consumer Key is missing"
+                );
+            }
+
             var Secret = configuration["Merchant:consumer_secret"];
+            if (Secret is null || Secret is "")
+            {
+                logger.LogError("Consumer Secret is missing");
+                throw new InvalidOperationException(
+                    "Consumer Secret is missing"
+                );
+            }
+
             var authUrl = configuration["Integration:AuthUrl"];
+            if (authUrl is null || authUrl is "")
+            {
+                logger.LogError("Authentication Url is missing");
+                throw new InvalidOperationException(
+                    "Authentication Url is missing"
+                );
+            }
 
             // construct the payload
-            var payload = new
+            var payload = new PesapalAuthRequest
             {
-                consumer_key = Key,
-                consumer_secret = Secret
+                consumerKey = Key,
+                consumerSecret = Secret
             };
 
             var jsonString = JsonContent.Create(payload);
@@ -66,7 +91,78 @@ namespace PesapalAPI.Services
                 );
             }
 
+            var token = pesapalResponse.token;
+
             return pesapalResponse;
+
+        }
+
+        public async Task<RegisterIpnResponse> RegisterIpnAsync()
+        {
+            var authToken = await AuthenticateAsync();
+            var token = authToken.token;
+
+            var ipnReg = configuration["Integration:IpnReg"];
+            if (string.IsNullOrWhiteSpace(ipnReg))
+            {
+                throw new InvalidOperationException(
+                    "Missing Registration url");
+            }
+
+            var ipnUrl = configuration["Integration:IpnUrl"];
+            if (string.IsNullOrWhiteSpace(ipnUrl))
+            {
+                throw new InvalidOperationException(
+                    "Missing callback url"
+                );
+            }
+
+            var payload = new RegisterIpnRequest
+            {
+                Url = ipnUrl,
+                IpnNotificationType = "GET"
+            };
+
+            string json = JsonSerializer.Serialize(payload);
+
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+            using var request = new HttpRequestMessage(HttpMethod.Post, ipnReg)
+            {
+                Content = content
+            };
+
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
+            using var response = await httpClient.SendAsync(request);
+            if (!response.IsSuccessStatusCode)
+            {
+                logger.LogError("Error occured when the post request was sent Status: {}", response.StatusCode);
+                throw new InvalidOperationException(
+                    "Register Ipn request failed with response code"
+                );
+            }
+
+            var registrationResponse = await response.Content.ReadFromJsonAsync<RegisterIpnResponse>();
+
+            if (registrationResponse is null)
+            {
+                logger.LogError("Error Occured. Response was null");
+                throw new InvalidOperationException(
+                    "Expected an Authentication response but received a null payload"
+                );
+            }
+
+            if (registrationResponse.Status != "200")
+            {
+                logger.LogError("Registration Failed with status code: {Status}", registrationResponse.Status);
+                throw new InvalidOperationException(
+                    "Registration failed.");
+            }
+
+            return registrationResponse;
 
         }
     }
