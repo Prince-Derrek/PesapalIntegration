@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("PesapalAPI")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+43aa8bbf1d3ae14386df5e3aac24fac4a7b05d21")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+7c9ef417f17f2bce002048192514f9ba16c17d77")]
 [assembly: System.Reflection.AssemblyProductAttribute("PesapalAPI")]
 [assembly: System.Reflection.AssemblyTitleAttribute("PesapalAPI")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
