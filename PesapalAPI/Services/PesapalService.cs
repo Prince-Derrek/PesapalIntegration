@@ -195,12 +195,18 @@ namespace PesapalAPI.Services
             }
 
             var ipnListResponse = await response.Content.ReadFromJsonAsync<List<IpnListResponse>>();
-            if (ipnListResponse is [])
+            if (ipnListResponse is null)
             {
-                logger.LogError("No IPNs were found registered");
+                logger.LogError("Pesapal returned a null response");
                 throw new InvalidOperationException(
-                    "No IPNs were found"
+                    "An Unexpected error occured. Received a null response"
                 );
+            }
+
+            if (ipnListResponse.Count == 0)
+            {
+                logger.LogInformation("No Ipn registrations were founf");
+                return ipnListResponse;
             }
 
             return ipnListResponse;

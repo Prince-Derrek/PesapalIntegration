@@ -4,7 +4,7 @@ using PesapalAPI.Services;
 namespace PesapalAPI.Controller;
 
 [ApiController]
-[Route("api/register/ipn")]
+[Route("api/registration")]
 public class IpnRegistrationController : ControllerBase
 {
     private readonly PesapalService _pesapalService;
@@ -16,7 +16,7 @@ public class IpnRegistrationController : ControllerBase
         _logger = logger;
     }
 
-    [HttpPost]
+    [HttpPost("ipn")]
     public async Task<IActionResult> RegisterIpnAsync()
     {
         try
@@ -27,6 +27,21 @@ public class IpnRegistrationController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "IPN Registration failed");
+            throw;
+        }
+    }
+
+    [HttpGet("list")]
+    public async Task<IActionResult> GetIpnListAsync()
+    {
+        try
+        {
+            var ipnList = await _pesapalService.GetIpnListAsync();
+            return Ok(ipnList);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Get List failed");
             throw;
         }
     }
