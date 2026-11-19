@@ -326,7 +326,8 @@ namespace PesapalAPI.Services
 
             if (orderResponse.Status != "200")
             {
-                logger.LogError("Order failed with status: {StatusCode} || {ErrorMessage}", orderResponse.Status, orderResponse.Error);
+                var errorMessage = orderResponse.Error;
+                logger.LogError("Order failed with status: {StatusCode} || {ErrorMessage}", orderResponse.Status, errorMessage);
                 throw new InvalidOperationException(
                     "Error Occured. Order Failed"
                 );

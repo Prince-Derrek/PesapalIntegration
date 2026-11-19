@@ -14,7 +14,7 @@ public class SubmitOrderResponse
     public string RedirectUrl { get; set; } = string.Empty;
 
     [JsonPropertyName("error")]
-    public int? Error { get; set; }
+    public PesapalError? Error { get; set; }
 
     [JsonPropertyName("status")]
     public string Status { get; set; } = string.Empty;
