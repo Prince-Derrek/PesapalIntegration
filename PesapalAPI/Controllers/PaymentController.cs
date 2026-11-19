@@ -37,4 +37,17 @@ public class PaymentController : ControllerBase
 
         return Ok(response);
     }
+
+    [HttpGet("tracking")]
+    public async Task<IActionResult> TrackPayment(string orderTrackingId)
+    {
+        var response = await _pesapalService.GetTransactionStatusAsync(orderTrackingId);
+
+        _logger.LogInformation(
+            "Tracking new payment order. Order Reference Id: {Reference}",
+            orderTrackingId
+        );
+
+        return Ok(response);
+    }
 }

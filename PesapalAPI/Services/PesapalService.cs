@@ -326,13 +326,65 @@ namespace PesapalAPI.Services
 
             if (orderResponse.Status != "200")
             {
-                logger.LogError("Order failed with status: {StatusCode} || {ErrorMessage}", orderResponse.Status, orderResponse.Error);
+                var errorMessage = orderResponse.Error;
+                logger.LogError("Order failed with status: {StatusCode} || {ErrorMessage}", orderResponse.Status, errorMessage);
                 throw new InvalidOperationException(
                     "Error Occured. Order Failed"
                 );
             }
 
             return orderResponse;
+
+        }
+
+        public async Task<TransactionStatusResponse> GetTransactionStatusAsync(string orderTrackingId)
+        {
+            if (string.IsNullOrWhiteSpace(orderTrackingId))
+            {
+                logger.LogError("Order Tracking Id is missing");
+                throw new InvalidOperationException(
+                    "Order Tracking Id is missing"
+                );
+            }
+            var transactionStatusUrl = configuration["Integration:TransactionStatus"];
+            if (string.IsNullOrWhiteSpace(transactionStatusUrl))
+            {
+                logger.LogError("Get Transaction Status Url is missing");
+                throw new InvalidOperationException(
+                    "Get Transaction Status Url is missing"
+                );
+            }
+
+            var authToken = await AuthenticateAsync();
+            var bearerToken = authToken.token;
+
+            var requestUrl = $"{transactionStatusUrl}?orderTrackingId={Uri.EscapeDataString(orderTrackingId)}";
+
+            using var request = new HttpRequestMessage(HttpMethod.Get, requestUrl);
+
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", bearerToken);
+
+            request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
+            using var response = await httpClient.SendAsync(request);
+            if (!response.IsSuccessStatusCode)
+            {
+                logger.LogError("Error occured when the Order Tracking request was sent || Status: {StatusCode} for Order Tracking Id {OrderId}", response.StatusCode, orderTrackingId);
+                throw new InvalidOperationException(
+                    $"Order tracking request failed || Order Tracking Id {orderTrackingId}"
+                );
+            }
+
+            var orderTrackingResponse = await response.Content.ReadFromJsonAsync<TransactionStatusResponse>();
+            if (orderTrackingResponse is null)
+            {
+                logger.LogError("Pesapal returned a null response");
+                throw new InvalidOperationException(
+                    "An Unexpected error occured. Received a null response"
+                );
+            }
+
+            return orderTrackingResponse;
 
         }
     }
