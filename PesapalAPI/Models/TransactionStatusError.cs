@@ -2,7 +2,7 @@ using System.Text.Json.Serialization;
 
 namespace PesapalAPI.Models;
 
-public class Error
+public class PesapalError
 {
     [JsonPropertyName("error_type")]
     public string? ErrorType { get; set; } = string.Empty;
@@ -13,6 +13,6 @@ public class Error
     [JsonPropertyName("message")]
     public string? Message { get; set; } = string.Empty;
 
-    [JsonPropertyName("callback_url")]
+    [JsonPropertyName("call_back_url")]
     public string? CallbackUrl { get; set; } = string.Empty;
 }

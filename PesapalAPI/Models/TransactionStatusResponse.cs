@@ -28,7 +28,7 @@ public class TransactionStatusResponse
     [JsonPropertyName("payment_account")]
     public string PaymentAccount { get; set; } = string.Empty;
 
-    [JsonPropertyName("callback_url")]
+    [JsonPropertyName("call_back_url")]
     public string CallbackUrl { get; set; } = string.Empty;
 
     [JsonPropertyName("status_code")]
@@ -44,7 +44,7 @@ public class TransactionStatusResponse
     public string Currency { get; set; } = string.Empty;
 
     [JsonPropertyName("error")]
-    public Error? Error { get; set; }
+    public PesapalError? Error { get; set; }
 
     [JsonPropertyName("status")]
     public string Status { get; set; } = string.Empty;
